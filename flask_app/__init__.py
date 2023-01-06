@@ -8,6 +8,10 @@ app = Flask(__name__)
 def index():
     return render_template("index.html"),200
 
+@app.route('/dashboard',methods=['GET'])
+def dashboard():
+    return render_template("dashboard.html"),200
+
 @app.route('/search/<rg>', methods=['GET'])
 def search(rg):
     
@@ -32,3 +36,8 @@ def search(rg):
     # 요청
     res = requests.get(url, headers=headers)
     res.json()
+
+if __name__ == '__main__':
+    # app.run(debug=True)
+    app.run(debug=True, host='127.0.0.1',port='5000')
+    # app.run(debug=True, host='0.0.0.0',port='5000')
