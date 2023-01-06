@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="../../favicon.ico">
+    <link rel="canonical" href="https://getbootstrap.com/docs/3.3/examples/starter-template/">
+
+    <title>Menupan-Story</title>
+
+    <!-- Naver maps -->
+    <script type="text/javascript"
+        src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=mxgcd10clr"></script>
+
+    <script>
+
+    </script>
+
+
+    <!-- Bootstrap core CSS -->
+    <link href="../static/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+    <!-- <link href="../../assets/css/ie10-viewport-bug-workaround.css" rel="stylesheet"> -->
+
+    <!-- Custom styles for this template -->
+    <link href="../static/starter-template.css" rel="stylesheet">
+
+    <!-- Just for debugging purposes. Don't actually copy these 2 lines! -->
+    <!--[if lt IE 9]><script src="../../assets/js/ie8-responsive-file-warning.js"></script><![endif]-->
+    <!-- <script src="../../assets/js/ie-emulation-modes-warning.js"></script> -->
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+    <![endif]-->
+</head>
+
+<body>
+
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
+                    aria-expanded="false" aria-controls="navbar">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="#">Project name</a>
+            </div>
+            <div id="navbar" class="collapse navbar-collapse">
+                <ul class="nav navbar-nav">
+                    <li class="active"><a href="#">Home</a></li>
+                    <li><a href="#about">About</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+            </div><!--/.nav-collapse -->
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Naver map api
+        ================================================== -->
+        <div id="map" style="width:100%;height:900px;"></div>
+
+        <script>
+            // var mapOptions = {
+            //     center: new naver.maps.LatLng(35.2055135, 129.0785672),
+            //     zoom: 15
+            // };
+
+            // var map = new naver.maps.Map('map', mapOptions);
+
+            var HOME_PATH = window.HOME_PATH || '.',
+                urlPrefix = HOME_PATH + '/data/region',
+                urlSuffix = '.json',
+                regionGeoJson = [],
+                loadCount = 0;
+
+            var map = new naver.maps.Map(document.getElementById('map'), {
+                zoom: 15,
+                mapTypeId: 'normal',
+                center: new naver.maps.LatLng(35.2055135, 129.0785672)
+            });
+
+            naver.maps.Event.once(map, 'init', function () {
+                for (var i = 1; i < 18; i++) {
+                    var keyword = i + '';
+
+                    if (keyword.length === 1) {
+                        keyword = '0' + keyword;
+                    }
+
+                    $.ajax({
+                        url: urlPrefix + keyword + urlSuffix,
+                        success: function (idx) {
+                            return function (geojson) {
+                                regionGeoJson[idx] = geojson;
+
+                                loadCount++;
+
+                                if (loadCount === 17) {
+                                    startDataLayer();
+                                }
+                            }
+                        }(i - 1)
+                    });
+                }
+            });
+
+            var tooltip = $('<div style="position:absolute;z-index:1000;padding:5px 10px;background-color:#fff;border:solid 2px #000;font-size:14px;pointer-events:none;display:none;"></div>');
+
+            tooltip.appendTo(map.getPanes().floatPane);
+
+            function startDataLayer() {
+                map.data.setStyle(function (feature) {
+                    var styleOptions = {
+                        fillColor: '#ff0000',
+                        fillOpacity: 0.0001,
+                        strokeColor: '#ff0000',
+                        strokeWeight: 2,
+                        strokeOpacity: 0.4
+                    };
+
+                    if (feature.getProperty('focus')) {
+                        styleOptions.fillOpacity = 0.6;
+                        styleOptions.fillColor = '#0f0';
+                        styleOptions.strokeColor = '#0f0';
+                        styleOptions.strokeWeight = 4;
+                        styleOptions.strokeOpacity = 1;
+                    }
+
+                    return styleOptions;
+                });
+
+                regionGeoJson.forEach(function (geojson) {
+                    map.data.addGeoJson(geojson);
+                });
+
+                map.data.addListener('click', function (e) {
+                    var feature = e.feature;
+
+                    if (feature.getProperty('focus') !== true) {
+                        feature.setProperty('focus', true);
+                    } else {
+                        feature.setProperty('focus', false);
+                    }
+                });
+
+                map.data.addListener('mouseover', function (e) {
+                    var feature = e.feature,
+                        regionName = feature.getProperty('area1');
+
+                    tooltip.css({
+                        display: '',
+                        left: e.offset.x,
+                        top: e.offset.y
+                    }).text(regionName);
+
+                    map.data.overrideStyle(feature, {
+                        fillOpacity: 0.6,
+                        strokeWeight: 4,
+                        strokeOpacity: 1
+                    });
+                });
+
+                map.data.addListener('mouseout', function (e) {
+                    tooltip.hide().empty();
+                    map.data.revertStyle();
+                });
+            }
+            // function initGeocoder() {
+            //     var latlng = map.getCenter();
+            //     var utmk = naver.maps.TransCoord.fromLatLngToUTMK(latlng); // 위/경도 -> UTMK
+            //     var tm128 = naver.maps.TransCoord.fromUTMKToTM128(utmk);   // UTMK -> TM128
+            //     var naverCoord = naver.maps.TransCoord.fromTM128ToNaver(tm128); // TM128 -> NAVER
+
+            //     infoWindow = new naver.maps.InfoWindow({
+            //         content: ''
+            //     });
+
+            //     map.addListener('click', function(e) {
+            //         var latlng = e.coord,
+            //             utmk = naver.maps.TransCoord.fromLatLngToUTMK(latlng),
+            //             tm128 = naver.maps.TransCoord.fromUTMKToTM128(utmk),
+            //             naverCoord = naver.maps.TransCoord.fromTM128ToNaver(tm128);
+
+            //         utmk.x = parseFloat(utmk.x.toFixed(1));
+            //         utmk.y = parseFloat(utmk.y.toFixed(1));
+
+            //         infoWindow.setContent([
+            //             '<div style="padding:10px;width:380px;font-size:14px;line-height:20px;">',
+            //             '<strong>LatLng</strong> : '+ '좌 클릭 지점 위/경도 좌표' +'<br />',
+            //             '<strong>UTMK</strong> : '+ '위/경도 좌표를 UTMK 좌표로 변환한 값' +'<br />',
+            //             '<strong>TM128</strong> : '+ '변환된 UTMK 좌표를 TM128 좌표로 변환한 값' +'<br />',
+            //             '<strong>NAVER</strong> : '+ '변환된 TM128 좌표를 NAVER 좌표로 변환한 값' +'<br />',
+            //             '</div>'
+            //         ].join(''));
+
+            //         infoWindow.open(map, latlng);
+            //         console.log('LatLng: ' + latlng.toString());
+            //         console.log('UTMK: ' + utmk.toString());
+            //         console.log('TM128: ' + tm128.toString());
+            //         console.log('NAVER: ' + naverCoord.toString());
+            //     });
+            // }
+
+            // naver.maps.onJSContentLoaded = initGeocoder;
+
+        </script>
+
+
+        <!-- <div class="starter-template">
+        <h1>Bootstrap starter template</h1>
+        <p class="lead">Use this document as a way to quickly start any new project.<br> All you get is this text and a mostly barebones HTML document.</p>
+      </div> -->
+
+    </div><!-- /.container -->
+
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="../static/js/jquery.min.js"></script>
+    <script>window.jQuery || document.write('<script src="../../assets/js/vendor/jquery.min.js"><\/script>')</script>
+    <script src="../static/js/bootstrap.min.js"></script>
+    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+    <!-- <script src="../../assets/js/ie10-viewport-bug-workaround.js"></script> -->
+
+
+</body>
+
+</html>
