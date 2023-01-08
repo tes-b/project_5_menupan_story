@@ -252,8 +252,10 @@
                             }
                             for (var i = 0, ii =items.length, item, addrType; i<ii; i++){
                                 item = items[i];
-                                dm = getDongmyun(item) || '';
-                                htmlAddresses.push((i) + '. ' + dm);
+                                ssd = getDongmyun(item) || '';
+                                // htmlAddresses.push((i) + '. ' + ssd[0]);
+                                htmlAddresses.push((i) + '. ' + ssd[1]);
+                                htmlAddresses.push((i) + '. ' + ssd[2]);
                             }
 
                             infoWindow.setContent([
@@ -341,11 +343,19 @@
                         
                         var sido = '', sigugun = '', dongmyun = '', ri = '', rest = '';
 
+                        if (hasArea(region.area1)) {
+                            sido = region.area1.name;
+                        }
+
+                        if (hasArea(region.area2)) {
+                            sigugun = region.area2.name;
+                        }
+
                         if (hasArea(region.area3)) {
                             dongmyun = region.area3.name;
                         }
 
-                        return dongmyun
+                        return [sido, sigugun, dongmyun]
                     }
 
                     function makeAddress(item) {
