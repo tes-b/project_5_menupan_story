@@ -1,44 +1,8 @@
-<!-- {{res}} -->
-
-<!-- <div id="map" style="width:100%;height:700px;"></div> -->
-<div id="map" style="width:100%;height:700px;"></div>
-
-<script>
-
-//===========================================================
-var mapOptions = {
-    center: new naver.maps.LatLng(35.2056295, 129.078463),
-    mapTypeId: 'normal',
-    scaleControl: true,
-    logoControl: false,
-    mapDataControl: true,
-    minZoom: 15,
-    zoomControl: true, // 줌
-    zoomControlOptions: {
-        style: naver.maps.ZoomControlStyle.LARGE,
-        position: naver.maps.Position.TOP_RIGHT
-    }
-};
-
-var map = new naver.maps.Map(document.getElementById('map'), mapOptions);
-
-var contentEl = $('<div class="iw_inner" style="overflow:auto;width:50%;height:100%;position:absolute;top:0;left:0;z-index:1000;background-color:#fff;border:solid 1px #333;">'
-        + '<h3>{{kw}}</h3>'
-        + '<p style="font-size:20px;">zoom : <em class="zoom">'+ map.getZoom() +'</em></p>'
-        + '<p style="font-size:20px;">centerPoint : <em class="center">'+ map.getCenterPoint() +'</em></p>'
-        + '<p style="font-size:20px;">centerPoint : <em class="center">'+ '{{res_total}}' +'</em></p>'
-        + '<p style="font-size:20px;">centerPoint : <em class="center">'+ '{{res_cat_ratio}}' +'</em></p>'
-        + '</div>');
-
-    contentEl.appendTo(map.getElement());
-
-    naver.maps.Event.addListener(map, 'zoom_changed', function(zoom) {
-        contentEl.find('.zoom').text(zoom);
-    });
-
-    naver.maps.Event.addListener(map, 'bounds_changed', function(bounds) {
-        contentEl.find('.center').text(map.getCenterPoint());
-        console.log('Center: ' + map.getCenter().toString() + ', Bounds: ' + bounds.toString());
-    });
-
-</script>
+<!-- {{res_region}} -->
+<table>
+{% for item in res_region %}
+    <tr>
+        <td><a href="../dashboard/{{item}}">{{item['sido']}} {{item['sigu']}} {{item['dongmyun']}}</a></td>
+    </tr>
+{% endfor %}
+</table>

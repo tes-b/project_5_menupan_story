@@ -4,52 +4,119 @@ import os
 import sys
 import urllib
 from modules.dbModule import Database
-
+from modules.visualiser import Visualiser
+import pandas as pd
 
 app = Flask(__name__)
 
 @app.route('/',methods=['GET'])
 def index():
-    # db = Database()
-    # query = """
-    # SELECT * FROM restaurants 
-    # WHERE dongmyun = '상도동';
-    # """
-    # result = db.executeAll(query)
-    # db.close()
-
     return render_template("index.html"),200
 
 @app.route('/dashboard/<kw>',methods=['GET'])
 def dashboard(kw):
+    kw = eval(kw)
+    sido = kw['sido']
+    sigu = kw['sigu']
+    dongmyun = kw['dongmyun']
+    kw = " ".join([sido, sigu, dongmyun])
+    print(sido, sigu, dongmyun, kw)
+
     database = Database()
     query_total = f"""
-    SELECT COUNT(*) FROM restaurants 
-    WHERE dongmyun = '{kw}'
+    SELECT COUNT(*) AS total FROM restaurants 
+    WHERE sido = '{sido}' AND sigu = '{sigu}' AND dongmyun = '{dongmyun}'
     """
-    res_total = database.execute_all(query_total)
+    """
+    SELECT COUNT(*) AS total FROM restaurants 
+    WHERE sido = '서울특별시' AND sigu = '영등포구' AND dongmyun = '대림동'
+    """
+
+    res_total = database.execute_one(query_total)
+    print(res_total)
 
     query_cat_ratio = f"""
     SELECT category, COUNT(category) AS cnt 
     FROM restaurants 
-    WHERE dongmyun = '{kw}' 
-    GROUP BY category;
+    WHERE sido = '{sido}' AND sigu = '{sigu}' AND dongmyun = '{dongmyun}'
+    GROUP BY category
+    ORDER BY cnt DESC
+    ;
     """
 
     res_cat_ratio = database.execute_all(query_cat_ratio)
 
+        
+    dm = dongmyun[:-1]
+    if dm[-1] in ["1","2","3","4","5","6","7","8","9"]:
+        dm = dm[:-1]
+        if dm[-1] == "제":
+            dm = dm[:-1]
+    # SELECT sido, sigu, dongmyun, total, 1p, 2p, 3p, 4p, 5p_over
+    query_hh = f"""
+    SELECT total, 1p, 2p, 3p, 4p, 5p_over
+    FROM household
+    WHERE sido = '{sido}' AND sigu = '{sigu}' AND dongmyun LIKE '{dm}%%'
+    ;
+    """
+    res_hh = database.execute_all(query_hh)
+
+    df = pd.DataFrame.from_dict(res_hh)
+    df = df.sum(axis=0)
+    res_hh = df[["total","5p_over","4p","3p","2p","1p"]]
+
+    # SELECT sido, sigu, dongmyun, total, male, female, over65_total, over65_male, over65_female
+    query_senior = f"""
+    SELECT total, over65_total
+    FROM senior
+    WHERE sido = '{sido}' AND sigu = '{sigu}' AND dongmyun LIKE '{dm}%%'
+    ;
+    """
+
+    res_sn = database.execute_all(query_senior)
+    
+    df = pd.DataFrame.from_dict(res_sn)
+    sn = df.sum(axis=0)
 
     database.close()
+
+    visualiser = Visualiser()
+    visualiser.pie_cat_ratio(res_cat_ratio,"업종비율")
+    visualiser.table_cat_cnt(res_cat_ratio)
+    visualiser.pie_household(res_hh,"가구원수 비율")
+    visualiser.table_senior(sn)
+
     return render_template("dashboard.html",
-    kw=kw,
-    res_total=res_total,
-    res_cat_ratio=res_cat_ratio,
+        kw=kw,
+        res_total=res_total,
+        res_cat_ratio=res_cat_ratio,
+        res_hh=res_hh,
+        res_sn=sn
     ),200
 
 
 @app.route('/search/<kw>',methods=['GET'])
 def search(kw):
-    return render_template('dashboard.html'),200
+
+    database = Database()
+    try:
+        query_search_region=f"""
+        SELECT DISTINCT sido, sigu, dongmyun
+        FROM restaurants
+        WHERE dongmyun LIKE '%%{kw}%%';
+        """
+        res_region = database.execute_all(query_search_region)
+        database.close()
+    except:
+        database.close()
+    
+    print(res_region)
+
+    return render_template('search.html', 
+        kw=kw, 
+        res_region=res_region
+    ),200
+    
 
 if __name__ == '__main__':
     # app.run(debug=True)
