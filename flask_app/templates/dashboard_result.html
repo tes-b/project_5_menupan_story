@@ -1,18 +1,22 @@
-<!-- {{res}} -->
-
 <!-- <div id="map" style="width:100%;height:700px;"></div> -->
 <div id="map" style="width:100%;height:700px;"></div>
 
 <script>
 
 //===========================================================
+
+// 지도 생성
+
 var mapOptions = {
+    // center: new naver.maps.LatLng(latlng[0], latlng[1]),
     center: new naver.maps.LatLng(35.2056295, 129.078463),
+    // center: jeju,
     mapTypeId: 'normal',
     scaleControl: true,
     logoControl: false,
     mapDataControl: true,
-    minZoom: 15,
+    minZoom: 7,
+    maxZoom: 15,
     zoomControl: true, // 줌
     zoomControlOptions: {
         style: naver.maps.ZoomControlStyle.LARGE,
@@ -21,6 +25,8 @@ var mapOptions = {
 };
 
 var map = new naver.maps.Map(document.getElementById('map'), mapOptions);
+
+searchAddressToCoordinate("{{kw}}")
 
 var contentEl = $('<div class="iw_inner" style="overflow:auto;width:50%;height:100%;position:absolute;top:0;left:0;z-index:1000;background-color:#fff;border:solid 1px #333;">'
         // + '<h3>{{kw}}</h3>'
@@ -31,19 +37,57 @@ var contentEl = $('<div class="iw_inner" style="overflow:auto;width:50%;height:1
         + '<iframe src="../static/charts/table_cat_cnt.html" width="45%" height="400" frameborder="0" framespacing="0" marginheight="0" marginwidth="0" scrolling="no" vspace="0"></iframe>'
         + '<iframe src="../static/charts/pie_household.html" width="55%" height="400" frameborder="0" framespacing="0" marginheight="0" marginwidth="0" scrolling="no" vspace="0"></iframe>'
         + '<iframe src="../static/charts/table_senior.html" width="45%" height="400" frameborder="0" framespacing="0" marginheight="0" marginwidth="0" scrolling="no" vspace="0"></iframe>'
-        // + '<p align="center" style="font-size:40px;"> 고령인구 비율' +'</p>'
-        // + '<p align="center" style="font-size:40px;"> {{res_sn["over65_total"]/res_sn["total"] * 100}}' +'</p>'
         + '</div>');
 
     contentEl.appendTo(map.getElement());
 
-    naver.maps.Event.addListener(map, 'zoom_changed', function(zoom) {
-        contentEl.find('.zoom').text(zoom);
-    });
+    // naver.maps.Event.addListener(map, 'zoom_changed', function(zoom) {
+    //     contentEl.find('.zoom').text(zoom);
+    // });
 
-    naver.maps.Event.addListener(map, 'bounds_changed', function(bounds) {
-        contentEl.find('.center').text(map.getCenterPoint());
-        console.log('Center: ' + map.getCenter().toString() + ', Bounds: ' + bounds.toString());
+    // naver.maps.Event.addListener(map, 'bounds_changed', function(bounds) {
+    //     contentEl.find('.center').text(map.getCenterPoint());
+    //     console.log('Center: ' + map.getCenter().toString() + ', Bounds: ' + bounds.toString());
+    // });
+
+
+//검색한 주소의 정보를 insertAddress 함수로 넘겨준다.
+function searchAddressToCoordinate(address) {
+    naver.maps.Service.geocode({
+        query: address
+    }, function(status, response) {
+        if (status === naver.maps.Service.Status.ERROR) {
+            return alert('Something Wrong!');
+        }
+        if (response.v2.meta.totalCount === 0) {
+            return alert('올바른 주소를 입력해주세요.');
+        }
+        var htmlAddresses = [],
+            item = response.v2.addresses[0],
+            point = new naver.maps.Point(item.x, item.y);
+        if (item.roadAddress) {
+            htmlAddresses.push('[도로명 주소] ' + item.roadAddress);
+        }
+        if (item.jibunAddress) {
+            htmlAddresses.push('[지번 주소] ' + item.jibunAddress);
+        }
+        if (item.englishAddress) {
+            htmlAddresses.push('[영문명 주소] ' + item.englishAddress);
+        }
+
+        // 지도 이동
+        var latitude = item.x
+        var longitude = item.y
+        var offset = 0.035
+        map.morph(new naver.maps.LatLng(longitude, latitude-offset),14)
+        
+        // 마커 생성
+        var marker = new naver.maps.Marker({
+            map: map,
+            position: new naver.maps.LatLng(longitude, latitude),
+        });
     });
+}
+
 
 </script>

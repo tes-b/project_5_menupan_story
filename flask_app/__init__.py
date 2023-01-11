@@ -18,26 +18,24 @@ def dashboard(kw):
     kw = eval(kw)
     sido = kw['sido']
     sigu = kw['sigu']
+    sigu2 = kw['sigu2']
     dongmyun = kw['dongmyun']
-    kw = " ".join([sido, sigu, dongmyun])
-    print(sido, sigu, dongmyun, kw)
+    kw = " ".join([sido, sigu, sigu2, dongmyun])
+    print(sido, sigu, sigu2, dongmyun, kw)
 
     database = Database()
     query_total = f"""
-    SELECT COUNT(*) AS total FROM restaurants 
+    SELECT COUNT(*) AS total FROM restaurant 
     WHERE sido = '{sido}' AND sigu = '{sigu}' AND dongmyun = '{dongmyun}'
     """
-    """
-    SELECT COUNT(*) AS total FROM restaurants 
-    WHERE sido = '서울특별시' AND sigu = '영등포구' AND dongmyun = '대림동'
-    """
+
 
     res_total = database.execute_one(query_total)
     print(res_total)
 
     query_cat_ratio = f"""
     SELECT category, COUNT(category) AS cnt 
-    FROM restaurants 
+    FROM restaurant
     WHERE sido = '{sido}' AND sigu = '{sigu}' AND dongmyun = '{dongmyun}'
     GROUP BY category
     ORDER BY cnt DESC
@@ -56,7 +54,7 @@ def dashboard(kw):
     query_hh = f"""
     SELECT total, 1p, 2p, 3p, 4p, 5p_over
     FROM household
-    WHERE sido = '{sido}' AND sigu = '{sigu}' AND dongmyun LIKE '{dm}%%'
+    WHERE sido = '{sido}' AND dongmyun LIKE '{dm}%%'
     ;
     """
     res_hh = database.execute_all(query_hh)
@@ -69,7 +67,7 @@ def dashboard(kw):
     query_senior = f"""
     SELECT total, over65_total
     FROM senior
-    WHERE sido = '{sido}' AND sigu = '{sigu}' AND dongmyun LIKE '{dm}%%'
+    WHERE sido = '{sido}' AND dongmyun LIKE '{dm}%%'
     ;
     """
 
@@ -101,17 +99,23 @@ def search(kw):
     database = Database()
     try:
         query_search_region=f"""
-        SELECT DISTINCT sido, sigu, dongmyun
-        FROM restaurants
-        WHERE dongmyun LIKE '%%{kw}%%';
+        SELECT DISTINCT sido, sigu, sigu2, dongmyun
+        FROM restaurant
+        WHERE dongmyun LIKE '%%{kw}%%' 
+        ;
         """
         res_region = database.execute_all(query_search_region)
         database.close()
     except:
         database.close()
-    
-    print(res_region)
 
+    print(res_region)
+    for v in res_region:
+        if v["sigu"] == None:
+            v["sigu"] = ""
+        if v["sigu2"] == None:
+            v["sigu2"] = ""
+    
     return render_template('search.html', 
         kw=kw, 
         res_region=res_region
