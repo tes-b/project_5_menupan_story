@@ -1,20 +1,18 @@
 import pymysql
 import pymysql.cursors
+from modules.db_id import dbId
 
 TABLE_RESTAURANTS = "restaurants"
 
 class Database:
     def __init__(self):
-        host = 'localhost'
-        user = 'testid'
-        password = 'mysql1234'
-        db = 'menupan_main'
+        dbid = dbId();
 
         self.con = pymysql.connect(
-            host=host,
-            user=user,
-            password=password,
-            db=db,
+            host=dbid.get_host(),
+            user=dbid.get_user(),
+            password=dbid.get_password(),
+            db=dbid.get_dbName(),
             charset='utf8',
             cursorclass=pymysql.cursors.DictCursor
             )

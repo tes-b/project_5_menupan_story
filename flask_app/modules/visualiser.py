@@ -118,3 +118,22 @@ class Visualiser:
             margin=dict(t=10, b=10, l=20, r=20),
             )
         fig.write_html(f"./flask_app/static/charts/table_senior.html")
+
+    def table_area(self,data=None, title=""):
+
+        print("table_cat_cnt")
+        area,cnt = [],[]
+        for v in data:
+            area.append(v["area"])
+            cnt.append(v["cnt"])
+
+        fig = go.Figure(data=[go.Table(
+                header=dict(values=['<b>주변지역</b>', '<b>업체수</b>'], height=30, align='center'),
+                cells=dict(values=[area,cnt], height=30, align=['left', 'center']),
+                columnwidth = [100,50]
+                )])
+        fig.update_layout(
+            font=dict(size=15),
+            margin=dict(t=10, b=10, l=20, r=20),
+            )
+        fig.write_html(f"./flask_app/static/charts/table_area.html")

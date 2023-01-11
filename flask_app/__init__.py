@@ -9,12 +9,15 @@ import pandas as pd
 
 app = Flask(__name__)
 
+# 인덱스
 @app.route('/',methods=['GET'])
 def index():
     return render_template("index.html"),200
 
+# 대시보드
 @app.route('/dashboard/<kw>',methods=['GET'])
 def dashboard(kw):
+    # 지역 분류
     kw = eval(kw)
     sido = kw['sido']
     sigu = kw['sigu']
@@ -23,16 +26,19 @@ def dashboard(kw):
     kw = " ".join([sido, sigu, sigu2, dongmyun])
     print(sido, sigu, sigu2, dongmyun, kw)
 
+    # 데이터베이스 초기화
     database = Database()
+
+    # 업체수
     query_total = f"""
     SELECT COUNT(*) AS total FROM restaurant 
     WHERE sido = '{sido}' AND sigu = '{sigu}' AND dongmyun = '{dongmyun}'
     """
 
-
     res_total = database.execute_one(query_total)
     print(res_total)
 
+    # 업종
     query_cat_ratio = f"""
     SELECT category, COUNT(category) AS cnt 
     FROM restaurant
@@ -44,7 +50,35 @@ def dashboard(kw):
 
     res_cat_ratio = database.execute_all(query_cat_ratio)
 
-        
+    # 주변지역분류
+    query_area = f"""
+    SELECT area, COUNT(area) AS cnt 
+    FROM restaurant
+    WHERE sido = '{sido}' AND sigu = '{sigu}' AND dongmyun = '{dongmyun}'
+    GROUP BY area
+    ORDER BY cnt DESC
+    ;
+    """
+    
+    res_area = database.execute_all(query_area)
+    res_area.pop()
+    # print(res_area)
+    # non = 0
+    # i = 0
+    # for v in res_area:
+    #     if v["area"] == None:
+    #         non = v["cnt"]
+    #         break
+    #     i += 1
+    # for v in res_area:
+    #     if v["area"] == "기타":
+    #         v["cnt"] += non
+    #         break
+    # del res_area[i]
+    
+    print(res_area)
+
+    # 가구당 인원수 분포
     dm = dongmyun[:-1]
     if dm[-1] in ["1","2","3","4","5","6","7","8","9"]:
         dm = dm[:-1]
@@ -63,6 +97,9 @@ def dashboard(kw):
     df = df.sum(axis=0)
     res_hh = df[["total","5p_over","4p","3p","2p","1p"]]
 
+
+    # 고령인구 
+
     # SELECT sido, sigu, dongmyun, total, male, female, over65_total, over65_male, over65_female
     query_senior = f"""
     SELECT total, over65_total
@@ -76,27 +113,33 @@ def dashboard(kw):
     df = pd.DataFrame.from_dict(res_sn)
     sn = df.sum(axis=0)
 
+    # 데이터베이스 닫기
     database.close()
 
+    # 차트 생성
     visualiser = Visualiser()
     visualiser.pie_cat_ratio(res_cat_ratio,"업종비율")
     visualiser.table_cat_cnt(res_cat_ratio)
     visualiser.pie_household(res_hh,"가구원수 비율")
     visualiser.table_senior(sn)
+    visualiser.table_area(res_area)
 
     return render_template("dashboard.html",
         kw=kw,
         res_total=res_total,
         res_cat_ratio=res_cat_ratio,
         res_hh=res_hh,
-        res_sn=sn
+        res_sn=sn,
+        res_area=res_area
     ),200
 
-
+# 지역검색
 @app.route('/search/<kw>',methods=['GET'])
 def search(kw):
-
+    # 데이터베이스 초기화
     database = Database()
+    
+    # 검색
     try:
         query_search_region=f"""
         SELECT DISTINCT sido, sigu, sigu2, dongmyun
