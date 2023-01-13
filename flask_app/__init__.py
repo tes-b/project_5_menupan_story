@@ -6,6 +6,7 @@ import urllib
 from modules.dbModule import Database
 from modules.visualiser import Visualiser
 import pandas as pd
+import time
 
 app = Flask(__name__)
 
@@ -17,6 +18,7 @@ def index():
 # 대시보드
 @app.route('/dashboard/<kw>',methods=['GET'])
 def dashboard(kw):
+    # start = time.time()
     # 지역 분류
     kw = eval(kw)
     sido = kw['sido']
@@ -36,7 +38,7 @@ def dashboard(kw):
     """
 
     res_total = database.execute_one(query_total)
-    print(res_total)
+    # print(res_total)
 
     # 업종
     query_cat_ratio = f"""
@@ -76,7 +78,7 @@ def dashboard(kw):
     #         break
     # del res_area[i]
     
-    print(res_area)
+    # print(res_area)
 
     # 가구당 인원수 분포
     dm = dongmyun[:-1]
@@ -124,6 +126,8 @@ def dashboard(kw):
     visualiser.table_senior(sn)
     visualiser.table_area(res_area)
 
+    # end = time.time()
+    # print("python 수행시간 : " + str(end-start))
     return render_template("dashboard.html",
         kw=kw,
         res_total=res_total,
