@@ -1,12 +1,10 @@
 from flask import Flask, render_template
 import requests
-import os
-import sys
-import urllib
 from modules.dbModule import Database
 from modules.visualiser import Visualiser
 import pandas as pd
-import time
+# import time
+import json
 
 app = Flask(__name__)
 
@@ -115,8 +113,39 @@ def dashboard(kw):
     df = pd.DataFrame.from_dict(res_sn)
     sn = df.sum(axis=0)
 
+
+    #지역 경계
+    query_code = f"""
+    SELECT code
+    FROM codes
+    WHERE sido = '{sido}' AND dongmyun LIKE '{dm}%%'
+    ;
+    """
+    res_code = database.execute_one(query_code)
+    print(res_code)
+    service_url = "127.0.0.1:5000"
+    geocode = res_code["code"]
+    url_geo = f"http://api.vworld.kr/req/data?service=data&request=GetFeature&data=LT_C_ADEMD_INFO&key=CE5EF6B0-B38B-30BE-946C-8F54B767BE7A&domain={service_url}&attrFilter=emdCd:=:{geocode}"
+
+    with requests.get(url_geo) as page:
+        try:
+            page.raise_for_status()
+        except requests.exceptions.HTTPError as Err:
+            print(Err)
+        else:
+            res_geo = json.loads(page.content)
+            # print(res_geo["coordinates"])
+            # print(page.content["respnse"])
+            coord = res_geo["response"]["result"]["featureCollection"]["features"][0]["geometry"]["coordinates"][0][0]
+            # print(coord)
+            # content = json.dump(page.content)
+            # print(content["response"]["result"]["featureCollection"]["features"][0]["geometry"]["coordinates"])
+            # print(content.response.result.featureCollection.features.geometry.coordinates)
+            # soup = BeautifulSoup(page.content, 'html.parser')
+        
     # 데이터베이스 닫기
     database.close()
+   
 
     # 차트 생성
     visualiser = Visualiser()
@@ -134,7 +163,9 @@ def dashboard(kw):
         res_cat_ratio=res_cat_ratio,
         res_hh=res_hh,
         res_sn=sn,
-        res_area=res_area
+        res_area=res_area,
+        res_geo=res_geo,
+        coord=coord,
     ),200
 
 # 지역검색
