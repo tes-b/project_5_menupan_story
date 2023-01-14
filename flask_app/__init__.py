@@ -134,15 +134,11 @@ def dashboard(kw):
             print(Err)
         else:
             res_geo = json.loads(page.content)
-            # print(res_geo["coordinates"])
-            # print(page.content["respnse"])
             coord = res_geo["response"]["result"]["featureCollection"]["features"][0]["geometry"]["coordinates"][0][0]
             # print(coord)
-            # content = json.dump(page.content)
-            # print(content["response"]["result"]["featureCollection"]["features"][0]["geometry"]["coordinates"])
-            # print(content.response.result.featureCollection.features.geometry.coordinates)
-            # soup = BeautifulSoup(page.content, 'html.parser')
-        
+       
+    
+    print("got requet")
     # 데이터베이스 닫기
     database.close()
    
@@ -178,8 +174,14 @@ def search(kw):
     try:
         query_search_region=f"""
         SELECT DISTINCT sido, sigu, sigu2, dongmyun
-        FROM restaurant
-        WHERE dongmyun LIKE '%%{kw}%%' 
+        FROM codes
+        WHERE dongmyun IS NOT NULL
+        AND (
+        sido LIKE '%%{kw}%%' 
+        OR sigu LIKE '%%{kw}%%'
+        OR sigu2 LIKE '%%{kw}%%'
+        OR dongmyun LIKE '%%{kw}%%'
+        )
         ;
         """
         res_region = database.execute_all(query_search_region)

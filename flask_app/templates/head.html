@@ -81,15 +81,27 @@
 
 
 <script>
+    // 지역검색
     function getvalue() {
         var idx = document.getElementById('search_kw').value;
         var url = '/search/' + idx;
         return url;
     }
-
+    // 대시보드
     function getdash() {
         var idx = document.getElementById('dashboard_kw').value;
         var url = '/dashboard/' + idx;
         return url;
     }
+    // 엔터키이벤트
+    $(document).ready(function() {
+            $("#search_kw").keydown(function(key) {
+                if (key.keyCode == 13) {
+                    var idx = document.getElementById('search_kw').value;
+                    var url = '/search/' + idx;
+                    // alert(url);
+                    location.href = url;
+                }
+            });
+        });
 </script>
