@@ -132,7 +132,8 @@ def dashboard(kw):
     print(res_code)
     service_url = dbid.get_service_url()
     geocode = res_code["code"]
-    url_geo = f"http://api.vworld.kr/req/data?service=data&request=GetFeature&data=LT_C_ADEMD_INFO&key=CE5EF6B0-B38B-30BE-946C-8F54B767BE7A&domain={service_url}&attrFilter=emdCd:=:{geocode}"
+    key = dbid.get_vworld_key()
+    url_geo = f"http://api.vworld.kr/req/data?service=data&request=GetFeature&data=LT_C_ADEMD_INFO&key={key}&domain={service_url}&attrFilter=emdCd:=:{geocode}"
 
     with requests.get(url_geo) as page:
         try:
@@ -217,9 +218,7 @@ def search(kw):
     
 
 if __name__ == '__main__':
-    # app.run(debug=True)
+    
     dbid = dbId()
-    host=dbid.get_service_ip()
     port=dbid.get_service_port()
-    app.run(debug=False, host=host, port=port)
-    # app.run(debug=True, host='0.0.0.0',port='5000')
+    app.run(debug=False, host="127.0.0.1", port=port)
