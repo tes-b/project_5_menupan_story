@@ -142,6 +142,8 @@ def dashboard(kw):
             print(Err)
         else:
             res_geo = json.loads(page.content)
+            if res_geo["response"]["status"] != "OK":
+                print(res_geo["response"])
             coord = res_geo["response"]["result"]["featureCollection"]["features"][0]["geometry"]["coordinates"][0][0]
             # print(coord)
        
@@ -221,4 +223,4 @@ if __name__ == '__main__':
     
     dbid = dbId()
     port=dbid.get_service_port()
-    app.run(debug=False, host="127.0.0.1", port=port)
+    app.run(debug=False, host="0.0.0.0", port=port)
