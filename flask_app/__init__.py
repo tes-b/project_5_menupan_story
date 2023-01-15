@@ -2,7 +2,10 @@ from flask import Flask, render_template
 import requests
 from modules.dbModule import Database
 from modules.visualiser import Visualiser
+from modules.db_id import dbId
 import pandas as pd
+
+
 # import time
 import json
 
@@ -11,7 +14,9 @@ app = Flask(__name__)
 # 인덱스
 @app.route('/',methods=['GET'])
 def index():
-    return render_template("index.html"),200
+    dbid = dbId()
+    mapapi_id = dbid.get_mapapiId()
+    return render_template("index.html",mapapi_id=mapapi_id),200
 
 # 대시보드
 @app.route('/dashboard/<kw>',methods=['GET'])
@@ -28,7 +33,9 @@ def dashboard(kw):
 
     # 데이터베이스 초기화
     database = Database()
-
+    dbid = dbId()
+    mapapi_id = dbid.get_mapapiId()
+    
     # 업체수
     query_total = f"""
     SELECT COUNT(*) AS total FROM restaurant 
@@ -123,7 +130,7 @@ def dashboard(kw):
     """
     res_code = database.execute_one(query_code)
     print(res_code)
-    service_url = "127.0.0.1:5000"
+    service_url = dbid.get_service_url()
     geocode = res_code["code"]
     url_geo = f"http://api.vworld.kr/req/data?service=data&request=GetFeature&data=LT_C_ADEMD_INFO&key=CE5EF6B0-B38B-30BE-946C-8F54B767BE7A&domain={service_url}&attrFilter=emdCd:=:{geocode}"
 
@@ -153,8 +160,11 @@ def dashboard(kw):
 
     # end = time.time()
     # print("python 수행시간 : " + str(end-start))
+
+
     return render_template("dashboard.html",
         kw=kw,
+        mapapi_id=mapapi_id,
         res_total=res_total,
         res_cat_ratio=res_cat_ratio,
         res_hh=res_hh,
@@ -196,13 +206,20 @@ def search(kw):
         if v["sigu2"] == None:
             v["sigu2"] = ""
     
+    dbid = dbId()
+    mapapi_id = dbid.get_mapapiId()
+
     return render_template('search.html', 
         kw=kw, 
+        mapapi_id=mapapi_id,
         res_region=res_region
     ),200
     
 
 if __name__ == '__main__':
     # app.run(debug=True)
-    app.run(debug=False, host='127.0.0.1',port='5000')
+    dbid = dbId()
+    host=dbid.get_service_ip()
+    port=dbid.get_service_port()
+    app.run(debug=False, host=host, port=port)
     # app.run(debug=True, host='0.0.0.0',port='5000')
