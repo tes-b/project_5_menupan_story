@@ -1,4 +1,10 @@
 project_memo.md
+flask_app/static/charts
+flask_app/test.ipynb
+flask_app/test.json
+flask_app/test.py
+flask_app/modules/db_id.py
+data
 
 ### Flask ###
 instance/*
