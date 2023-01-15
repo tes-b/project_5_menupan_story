@@ -10,9 +10,10 @@
 - 검색된 행정구역의 관련 통계 차트 (plotly)  
 
 활용 기술과 라이브러리  
-- flask  
-- bootstrap  
-- plotly  
-- mysql  
-- naver-map-api  
-- AWS EC2
+- flask     : 어플리케이션 제작  
+- bootstrap : 어플리케이션 템플릿  
+- plotly    : 차트 생성  
+- mysql     : 데이터베이스 
+- AWS EC2   : 어플리케이션 배포
+- naver-map-api : 지도 표시  
+
