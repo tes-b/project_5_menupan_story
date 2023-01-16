@@ -36,6 +36,7 @@ def dashboard(kw):
     dbid = dbId()
     mapapi_id = dbid.get_mapapiId()
     
+    #===============================================================
     # 업체수
     query_total = f"""
     SELECT COUNT(*) AS total FROM restaurant 
@@ -43,8 +44,9 @@ def dashboard(kw):
     """
 
     res_total = database.execute_one(query_total)
-    # print(res_total)
+    print("RESULT_TOTAL : ",res_total)
 
+    #===============================================================
     # 업종
     query_cat_ratio = f"""
     SELECT category, COUNT(category) AS cnt 
@@ -56,7 +58,9 @@ def dashboard(kw):
     """
 
     res_cat_ratio = database.execute_all(query_cat_ratio)
+    print("RESULT_CATEGORY : ",res_cat_ratio)
 
+    #===============================================================
     # 주변지역분류
     query_area = f"""
     SELECT area, COUNT(area) AS cnt 
@@ -68,23 +72,9 @@ def dashboard(kw):
     """
     
     res_area = database.execute_all(query_area)
-    res_area.pop()
-    # print(res_area)
-    # non = 0
-    # i = 0
-    # for v in res_area:
-    #     if v["area"] == None:
-    #         non = v["cnt"]
-    #         break
-    #     i += 1
-    # for v in res_area:
-    #     if v["area"] == "기타":
-    #         v["cnt"] += non
-    #         break
-    # del res_area[i]
-    
-    # print(res_area)
+    res_area.pop() # 기타 항목 제거
 
+    #===============================================================
     # 가구당 인원수 분포
     dm = dongmyun[:-1]
     if dm[-1] in ["1","2","3","4","5","6","7","8","9"]:
@@ -100,14 +90,10 @@ def dashboard(kw):
     """
     res_hh = database.execute_all(query_hh)
 
-    df = pd.DataFrame.from_dict(res_hh)
-    df = df.sum(axis=0)
-    res_hh = df[["total","5p_over","4p","3p","2p","1p"]]
+    print("RESULT_HOUSEHOLD : ",res_hh)
 
-
+    #===============================================================
     # 고령인구 
-
-    # SELECT sido, sigu, dongmyun, total, male, female, over65_total, over65_male, over65_female
     query_senior = f"""
     SELECT total, over65_total
     FROM senior
@@ -116,11 +102,10 @@ def dashboard(kw):
     """
 
     res_sn = database.execute_all(query_senior)
-    
-    df = pd.DataFrame.from_dict(res_sn)
-    sn = df.sum(axis=0)
 
+    print("RESULT_SENIOR : ", res_sn)
 
+    #===============================================================
     #지역 경계
     query_code = f"""
     SELECT code
@@ -129,26 +114,29 @@ def dashboard(kw):
     ;
     """
     res_code = database.execute_one(query_code)
-    print(res_code)
-    service_url = dbid.get_service_url()
-    geocode = res_code["code"]
-    key = dbid.get_vworld_key()
-    url_geo = f"http://api.vworld.kr/req/data?service=data&request=GetFeature&data=LT_C_ADEMD_INFO&key={key}&domain={service_url}&attrFilter=emdCd:=:{geocode}"
 
-    with requests.get(url_geo) as page:
-        try:
-            page.raise_for_status()
-        except requests.exceptions.HTTPError as Err:
-            print(Err)
-        else:
-            res_geo = json.loads(page.content)
-            if res_geo["response"]["status"] != "OK":
-                print(res_geo["response"])
-            coord = res_geo["response"]["result"]["featureCollection"]["features"][0]["geometry"]["coordinates"][0][0]
-            # print(coord)
-       
+    if res_code:
+        service_url = dbid.get_service_url()
+        geocode = res_code["code"]
+        key = dbid.get_vworld_key()
+        url_geo = f"http://api.vworld.kr/req/data?service=data&request=GetFeature&data=LT_C_ADEMD_INFO&key={key}&domain={service_url}&attrFilter=emdCd:=:{geocode}"
+
+        with requests.get(url_geo) as page:
+            try:
+                page.raise_for_status()
+            except requests.exceptions.HTTPError as Err:
+                print(Err)
+            else:
+                res_geo = json.loads(page.content)
+                if res_geo["response"]["status"] != "OK":
+                    print(res_geo["response"])
+                coord = res_geo["response"]["result"]["featureCollection"]["features"][0]["geometry"]["coordinates"][0][0]
+                # print(coord)
+    else:
+        res_code = None
+    # print("RESULT : ", res_code)
     
-    print("got requet")
+    
     # 데이터베이스 닫기
     database.close()
    
@@ -158,7 +146,7 @@ def dashboard(kw):
     visualiser.pie_cat_ratio(res_cat_ratio,"업종비율")
     visualiser.table_cat_cnt(res_cat_ratio)
     visualiser.pie_household(res_hh,"가구원수 비율")
-    visualiser.table_senior(sn)
+    visualiser.table_senior(res_sn)
     visualiser.table_area(res_area)
 
     # end = time.time()
@@ -169,11 +157,11 @@ def dashboard(kw):
         kw=kw,
         mapapi_id=mapapi_id,
         res_total=res_total,
-        res_cat_ratio=res_cat_ratio,
-        res_hh=res_hh,
-        res_sn=sn,
-        res_area=res_area,
-        res_geo=res_geo,
+        # res_cat_ratio=res_cat_ratio,
+        # res_hh=res_hh,
+        # res_sn=res_sn,
+        # res_area=res_area,
+        # res_geo=res_geo,
         coord=coord,
     ),200
 
@@ -224,3 +212,4 @@ if __name__ == '__main__':
     dbid = dbId()
     port=dbid.get_service_port()
     app.run(debug=False, host="0.0.0.0", port=port)
+    # app.run(debug=True, host="0.0.0.0", port=port)
