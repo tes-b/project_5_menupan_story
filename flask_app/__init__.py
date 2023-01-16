@@ -205,7 +205,16 @@ def search(kw):
         mapapi_id=mapapi_id,
         res_region=res_region
     ),200
-    
+
+@app.route('/info/',methods=['GET'])
+def info():
+    return render_template('info.html', 
+    ),200
+
+@app.route('/contact/',methods=['GET'])
+def contact():
+    return render_template('contact.html', 
+    ),200
 
 if __name__ == '__main__':
     

@@ -14,14 +14,15 @@
             {% include 'sidebar.html' %}
 
             <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
-                <!-- {% include 'selector.html' %} -->
-                
-                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                    <h1 class="h2">메뉴판 스토리</h1>
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom" style="text-align: center;">
+                    <div style="text-align: center;">
+                        <div><img src="{{ url_for('static', filename='/images/gromit.png') }}" height="200" width="200"></div>
+                        <tr><h1>geek yogurt</h1></tr>
+                        <div><h3>tsyi0313@gmail.com</h3></div> 
+                        <div><h3><A href = "https://github.com/tes-b" target = "link" >github</A></h3></div>
+                        <div><h3><A href = "https://tes-b.github.io/" target = "link" >blog</A></h3></dvi>
+                    </div>
                 </div>
-
-                {% include 'naver_map_api.html'%}
-
             </main>
         </div>
     </div>

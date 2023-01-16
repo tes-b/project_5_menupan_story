@@ -166,3 +166,13 @@ class Visualiser:
             html_file = open(file_name,'w')
             html_file.write(html_text)
             html_file.close()
+    
+    def hbar_category_sales(self, data=None, title=""):
+        df = pd.DataFrame(data=data,columns=['한식','양식']).set_index("장르")
+        df = df.sort_values(by="인기도",ascending=True)
+        fig = go.Figure(data=[go.Bar(
+            x=df["인기도"],
+            y=df.index,
+            orientation='h')])
+        fig.update_layout(title_text=title)
+        fig.write_html("./flask_app/static/charts/hbarchart.html")
